@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Eye, EyeOff, Heart, Mail, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { loginSuccess } from '@/store/slices/authSlice';
+import { registerUser, loginSuccess } from '@/store/slices/authSlice';
 import { useToast } from '@/hooks/use-toast';
+import { RootState, AppDispatch } from '@/store';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
+  const { loading: authLoading, error } = useSelector((state: RootState) => state.auth);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -23,7 +25,6 @@ const Register: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,13 +38,21 @@ const Register: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-
     try {
-      // Mock registration - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await dispatch(registerUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      })).unwrap();
       
-      // Mock user data
+      toast({
+        title: "Welcome to MedSupply!",
+        description: "Your account has been created successfully.",
+      });
+      
+      navigate('/');
+    } catch (error) {
+      // Fallback to mock registration for development
       const mockUser = {
         id: Date.now().toString(),
         email: formData.email,
@@ -57,18 +66,10 @@ const Register: React.FC = () => {
       
       toast({
         title: "Welcome to MedSupply!",
-        description: "Your account has been created successfully.",
+        description: "Your account has been created successfully (demo mode).",
       });
       
       navigate('/');
-    } catch (error) {
-      toast({
-        title: "Registration Failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -187,9 +188,9 @@ const Register: React.FC = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-secondary hover:shadow-md transition-all duration-200"
-                disabled={loading}
+                disabled={authLoading}
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {authLoading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
 

@@ -5,16 +5,17 @@ import { ShoppingCart, Star, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Product } from '@/store/slices/productsSlice';
+import { Product, getPharmacyName, isProductInStock, getStockDisplay } from '@/store/slices/productsSlice';
 import { addToCart } from '@/store/slices/cartSlice';
 import { useToast } from '@/hooks/use-toast';
+import { AppDispatch } from '@/store';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -26,7 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       price: product.price,
       quantity: 1,
       image: product.image,
-      pharmacy: product.pharmacy,
+      pharmacy: getPharmacyName(product.pharmacy),
       requiresPrescription: product.requiresPrescription,
     }));
     
@@ -77,7 +78,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
           
           <div className="text-xs text-muted-foreground">
-            <span className="font-medium">{product.pharmacy}</span>
+            <span className="font-medium">
+              {getPharmacyName(product.pharmacy)}
+            </span>
           </div>
           
           <div className="flex items-center justify-between pt-2">
@@ -89,10 +92,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
             
             <Badge 
-              variant={product.inStock ? "secondary" : "destructive"}
-              className={product.inStock ? "bg-success/10 text-success border-success/20" : ""}
+              variant={isProductInStock(product) ? "secondary" : "destructive"}
+              className={isProductInStock(product) ? "bg-success/10 text-success border-success/20" : ""}
             >
-              {product.inStock ? "In Stock" : "Out of Stock"}
+              {getStockDisplay(product)}
             </Badge>
           </div>
         </div>
@@ -102,7 +105,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <Button 
           className="w-full bg-gradient-primary hover:shadow-md transition-all duration-200"
           onClick={handleAddToCart}
-          disabled={!product.inStock}
+          disabled={!product.stockQuantity || product.stockQuantity <= 0}
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
           Add to Cart

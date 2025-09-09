@@ -9,12 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import Layout from '@/components/Layout/Layout';
-import { RootState } from '@/store';
-import { updateProfile } from '@/store/slices/authSlice';
+import { RootState, AppDispatch } from '@/store';
+import { updateUserProfile } from '@/store/slices/authSlice';
 import { useToast } from '@/hooks/use-toast';
 
 const Profile: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
   
   const { user } = useSelector((state: RootState) => state.auth);
@@ -26,21 +26,34 @@ const Profile: React.FC = () => {
     age: user?.age || '',
     phone: user?.phone || '',
     address: {
-      street: user?.address?.street || '',
-      city: user?.address?.city || '',
-      state: user?.address?.state || '',
-      zipCode: user?.address?.zipCode || '',
+      street: (typeof user?.address === 'object' ? user.address.street : '') || '',
+      city: (typeof user?.address === 'object' ? user.address.city : '') || '',
+      state: (typeof user?.address === 'object' ? user.address.state : '') || '',
+      zipCode: (typeof user?.address === 'object' ? user.address.zipCode : '') || '',
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(updateProfile(formData));
-    setIsEditing(false);
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been successfully updated.",
-    });
+    try {
+      // Convert age to number if it's a string
+      const profileData = {
+        ...formData,
+        age: typeof formData.age === 'string' ? parseInt(formData.age) || undefined : formData.age,
+      };
+      await dispatch(updateUserProfile(profileData)).unwrap();
+      setIsEditing(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been successfully updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

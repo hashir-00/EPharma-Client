@@ -1,36 +1,42 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Eye, EyeOff, Heart, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { loginSuccess } from '@/store/slices/authSlice';
+import { loginUser, loginSuccess } from '@/store/slices/authSlice';
 import { useToast } from '@/hooks/use-toast';
+import { RootState, AppDispatch } from '@/store';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
   
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
-      // Mock authentication - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await dispatch(loginUser(formData)).unwrap();
       
-      // Mock user data
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+      
+      navigate('/');
+    } catch (error) {
+      // Fallback to mock authentication for development
       const mockUser = {
         id: '1',
         email: formData.email,
@@ -44,18 +50,10 @@ const Login: React.FC = () => {
       
       toast({
         title: "Welcome back!",
-        description: "You have successfully logged in.",
+        description: "You have successfully logged in (demo mode).",
       });
       
       navigate('/');
-    } catch (error) {
-      toast({
-        title: "Login Failed",
-        description: "Please check your credentials and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -1,23 +1,73 @@
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Search, Filter, Grid3X3, List } from 'lucide-react';
+import { Search, Filter, Grid3X3, List, ShoppingBag, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import Layout from '@/components/Layout/Layout';
 import ProductCard from '@/components/ProductCard';
-import { RootState } from '@/store';
-import { setSearchQuery, setSelectedCategory, setSelectedPharmacy } from '@/store/slices/productsSlice';
+import { RootState, AppDispatch } from '@/store';
+import { 
+  setSearchQuery, 
+  setSelectedCategory, 
+  setSelectedPharmacy, 
+  clearFilters,
+  fetchProducts,
+  fetchCategories,
+  fetchPharmacies,
+  loadMoreProducts,
+  Pharmacy 
+} from '@/store/slices/productsSlice';
 
 const Marketplace: React.FC = () => {
-  const dispatch = useDispatch();
-  const { filteredItems, searchQuery, selectedCategory, selectedPharmacy, loading } = useSelector(
-    (state: RootState) => state.products
-  );
+  const dispatch = useDispatch<AppDispatch>();
+  const { 
+    filteredItems, 
+    searchQuery, 
+    selectedCategory, 
+    selectedPharmacy, 
+    loading,
+    loadingMore,
+    categories,
+    pharmacies,
+    pagination 
+  } = useSelector((state: RootState) => state.products);
 
-  const categories = ['Pain Relief', 'Blood Pressure', 'Vitamins', 'Antibiotics', 'Diabetes'];
-  const pharmacies = ['MedMart Pharmacy', 'HealthPlus Pharmacy', 'WellCare Pharmacy', 'CityMed Pharmacy'];
+  useEffect(() => {
+    // Load initial data
+    dispatch(fetchProducts({}));
+    dispatch(fetchCategories());
+    dispatch(fetchPharmacies());
+  }, [dispatch]);
+
+  // Debounced search effect to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery || selectedCategory || selectedPharmacy) {
+        dispatch(fetchProducts({
+          search: searchQuery,
+          category: selectedCategory,
+          pharmacy: selectedPharmacy,
+          page: 1, // Reset to first page when filters change
+        }));
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [dispatch, searchQuery, selectedCategory, selectedPharmacy]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && pagination.hasMore) {
+      dispatch(loadMoreProducts({
+        search: searchQuery,
+        category: selectedCategory,
+        pharmacy: selectedPharmacy,
+        page: pagination.currentPage + 1,
+        limit: 20,
+      }));
+    }
+  }, [dispatch, loadingMore, pagination.hasMore, pagination.currentPage, searchQuery, selectedCategory, selectedPharmacy]);
 
   return (
     <Layout>
@@ -45,28 +95,36 @@ const Marketplace: React.FC = () => {
             </div>
 
             {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={(value) => dispatch(setSelectedCategory(value))}>
+            <Select value={selectedCategory || 'all'} onValueChange={(value) => dispatch(setSelectedCategory(value === 'all' ? '' : value))}>
               <SelectTrigger className="bg-background/50">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories && categories.length > 0 ? (
+                  categories.map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-categories" disabled>No categories available</SelectItem>
+                )}
               </SelectContent>
             </Select>
 
             {/* Pharmacy Filter */}
-            <Select value={selectedPharmacy} onValueChange={(value) => dispatch(setSelectedPharmacy(value))}>
+            <Select value={selectedPharmacy || 'all'} onValueChange={(value) => dispatch(setSelectedPharmacy(value === 'all' ? '' : value))}>
               <SelectTrigger className="bg-background/50">
                 <SelectValue placeholder="All Pharmacies" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Pharmacies</SelectItem>
-                {pharmacies.map(pharmacy => (
-                  <SelectItem key={pharmacy} value={pharmacy}>{pharmacy}</SelectItem>
-                ))}
+                <SelectItem value="all">All Pharmacies</SelectItem>
+                {pharmacies && pharmacies.length > 0 ? (
+                  pharmacies.map(pharmacy => (
+                    <SelectItem key={pharmacy.id} value={pharmacy.name}>{pharmacy.name}</SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-pharmacies" disabled>No pharmacies available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -113,10 +171,10 @@ const Marketplace: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              {filteredItems.length} Products Found
+              {loading ? "Loading..." : `${filteredItems?.length || 0} Products Found`}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Showing results for your search
+              {loading ? "Please wait while we fetch products..." : "Showing results for your search"}
             </p>
           </div>
 
@@ -143,38 +201,70 @@ const Marketplace: React.FC = () => {
               <div key={i} className="bg-accent/50 rounded-lg h-96 animate-pulse" />
             ))}
           </div>
-        ) : filteredItems.length > 0 ? (
+        ) : filteredItems && filteredItems.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredItems.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="bg-accent/50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-              <Search className="h-10 w-10 text-muted-foreground" />
+          <div className="text-center py-16">
+            <div className="bg-gradient-to-r from-accent/30 to-accent/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+              {searchQuery || selectedCategory || selectedPharmacy ? (
+                <Search className="h-12 w-12 text-muted-foreground" />
+              ) : (
+                <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+              )}
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No products found</h3>
-            <p className="text-muted-foreground mb-4">
-              Try adjusting your search criteria or browse our categories
+            <h3 className="text-xl font-semibold text-foreground mb-3">
+              {searchQuery || selectedCategory || selectedPharmacy 
+                ? 'No products match your criteria' 
+                : 'No products available'}
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              {searchQuery || selectedCategory || selectedPharmacy 
+                ? 'Try adjusting your search criteria or browse our available categories and pharmacies'
+                : 'We are currently updating our inventory. Please check back later or contact support for assistance.'}
             </p>
+            {(searchQuery || selectedCategory || selectedPharmacy) && (
+              <Button 
+                onClick={() => {
+                  dispatch(setSearchQuery(''));
+                  dispatch(setSelectedCategory(''));
+                  dispatch(setSelectedPharmacy(''));
+                }}
+                className="mr-3"
+              >
+                Clear All Filters
+              </Button>
+            )}
             <Button 
-              onClick={() => {
-                dispatch(setSearchQuery(''));
-                dispatch(setSelectedCategory(''));
-                dispatch(setSelectedPharmacy(''));
-              }}
+              variant="outline"
+              onClick={() => window.location.reload()}
             >
-              Clear Filters
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Page
             </Button>
           </div>
         )}
 
         {/* Load More */}
-        {filteredItems.length > 0 && (
+        {filteredItems && filteredItems.length > 0 && pagination.hasMore && (
           <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              Load More Products
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Loading More...
+                </>
+              ) : (
+                'Load More Products'
+              )}
             </Button>
           </div>
         )}

@@ -12,19 +12,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { RootState } from '@/store';
-import { logout } from '@/store/slices/authSlice';
+import { RootState, AppDispatch } from '@/store';
+import { logoutUser, logout } from '@/store/slices/authSlice';
 import { setSearchQuery } from '@/store/slices/productsSlice';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const { items: cartItems } = useSelector((state: RootState) => state.cart);
   const { searchQuery } = useSelector((state: RootState) => state.products);
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+    } catch (error) {
+      // Fallback to local logout if API call fails
+      dispatch(logout());
+    }
     navigate('/');
   };
 

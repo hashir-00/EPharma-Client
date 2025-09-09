@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import Layout from '@/components/Layout/Layout';
 import { RootState } from '@/store';
 import { addToCart } from '@/store/slices/cartSlice';
+import { getPharmacyName, isProductInStock, getStockDisplay } from '@/store/slices/productsSlice';
 import { useToast } from '@/hooks/use-toast';
 
 const ProductDetail: React.FC = () => {
@@ -43,7 +44,7 @@ const ProductDetail: React.FC = () => {
       price: product.price,
       quantity,
       image: product.image,
-      pharmacy: product.pharmacy,
+      pharmacy: getPharmacyName(product.pharmacy),
       requiresPrescription: product.requiresPrescription,
     }));
     
@@ -118,14 +119,14 @@ const ProductDetail: React.FC = () => {
               
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                <span>Sold by {product.pharmacy}</span>
+                <span>Sold by {getPharmacyName(product.pharmacy)}</span>
               </div>
               
               <Badge 
-                variant={product.inStock ? "secondary" : "destructive"}
-                className={product.inStock ? "bg-success/10 text-success border-success/20" : ""}
+                variant={isProductInStock(product) ? "secondary" : "destructive"}
+                className={isProductInStock(product) ? "bg-success/10 text-success border-success/20" : ""}
               >
-                {product.inStock ? "In Stock" : "Out of Stock"}
+                {getStockDisplay(product)}
               </Badge>
             </div>
 
@@ -173,7 +174,7 @@ const ProductDetail: React.FC = () => {
 
               <Button 
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
+                disabled={!isProductInStock(product)}
                 className="w-full bg-gradient-primary hover:shadow-md transition-all duration-200"
                 size="lg"
               >
