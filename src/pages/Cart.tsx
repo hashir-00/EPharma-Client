@@ -1,21 +1,28 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Trash2, FileText, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import Layout from '@/components/Layout/Layout';
-import { RootState } from '@/store';
-import { updateQuantity, removeFromCart } from '@/store/slices/cartSlice';
-import { useToast } from '@/hooks/use-toast';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
+  FileText,
+  ArrowRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import Layout from "@/components/Layout/Layout";
+import { RootState } from "@/store";
+import { updateQuantity, removeFromCart } from "@/store/slices/cartSlice";
+import { useToast } from "@/hooks/use-toast";
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { toast } = useToast();
-  
+
   const { items, total } = useSelector((state: RootState) => state.cart);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
@@ -41,10 +48,10 @@ const Cart: React.FC = () => {
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
-    navigate('/checkout');
+    navigate("/checkout");
   };
 
   const prescriptionRequired = items.some(item => item.requiresPrescription);
@@ -57,12 +64,14 @@ const Cart: React.FC = () => {
             <div className="bg-accent/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
               <ShoppingCart className="h-12 w-12 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Your cart is empty</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              Your cart is empty
+            </h2>
             <p className="text-muted-foreground mb-6">
               Start shopping for health products and medications
             </p>
-            <Button 
-              onClick={() => navigate('/marketplace')}
+            <Button
+              onClick={() => navigate("/marketplace")}
               className="bg-gradient-primary"
             >
               Browse Products
@@ -80,9 +89,11 @@ const Cart: React.FC = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-foreground">Shopping Cart</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                Shopping Cart
+              </h1>
               <p className="text-muted-foreground">
-                {items.length} {items.length === 1 ? 'item' : 'items'}
+                {items.length} {items.length === 1 ? "item" : "items"}
               </p>
             </div>
 
@@ -92,9 +103,12 @@ const Cart: React.FC = () => {
                   <div className="flex items-start space-x-3">
                     <FileText className="h-5 w-5 text-warning mt-0.5" />
                     <div>
-                      <p className="font-medium text-warning">Prescription Required</p>
+                      <p className="font-medium text-warning">
+                        Prescription Required
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        Some items in your cart require a valid prescription. You'll need to upload it during checkout.
+                        Some items in your cart require a valid prescription.
+                        You'll need to upload it during checkout.
                       </p>
                     </div>
                   </div>
@@ -103,8 +117,11 @@ const Cart: React.FC = () => {
             )}
 
             <div className="space-y-4">
-              {items.map((item) => (
-                <Card key={item.id} className="bg-gradient-card border-border/50">
+              {items.map(item => (
+                <Card
+                  key={item.id}
+                  className="bg-gradient-card border-border/50"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-4">
                       <div className="w-20 h-20 bg-accent/50 rounded-lg overflow-hidden flex-shrink-0">
@@ -125,7 +142,10 @@ const Cart: React.FC = () => {
                               {item.pharmacy}
                             </p>
                             {item.requiresPrescription && (
-                              <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
+                              <Badge
+                                variant="secondary"
+                                className="bg-warning/10 text-warning border-warning/20"
+                              >
                                 <FileText className="h-3 w-3 mr-1" />
                                 Prescription Required
                               </Badge>
@@ -147,16 +167,22 @@ const Cart: React.FC = () => {
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                              onClick={() =>
+                                handleQuantityChange(item.id, item.quantity - 1)
+                              }
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="font-medium w-8 text-center">{item.quantity}</span>
+                            <span className="font-medium w-8 text-center">
+                              {item.quantity}
+                            </span>
                             <Button
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                              onClick={() =>
+                                handleQuantityChange(item.id, item.quantity + 1)
+                              }
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -206,10 +232,12 @@ const Cart: React.FC = () => {
 
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-primary">${(total * 1.08).toFixed(2)}</span>
+                  <span className="text-primary">
+                    ${(total * 1.08).toFixed(2)}
+                  </span>
                 </div>
 
-                <Button 
+                <Button
                   onClick={handleCheckout}
                   className="w-full bg-gradient-primary hover:shadow-md transition-all duration-200"
                   size="lg"
@@ -221,7 +249,7 @@ const Cart: React.FC = () => {
                 <div className="text-center">
                   <Button
                     variant="ghost"
-                    onClick={() => navigate('/marketplace')}
+                    onClick={() => navigate("/marketplace")}
                     className="text-primary hover:text-primary/80"
                   >
                     Continue Shopping

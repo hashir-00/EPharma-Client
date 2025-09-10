@@ -1,25 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { Eye, EyeOff, Heart, Mail, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { loginUser, loginSuccess } from '@/store/slices/authSlice';
-import { useToast } from '@/hooks/use-toast';
-import { RootState, AppDispatch } from '@/store';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Eye, EyeOff, Heart, Mail, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { loginUser, loginSuccess } from "@/store/slices/authSlice";
+import { useToast } from "@/hooks/use-toast";
+import { RootState, AppDispatch } from "@/store";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
   const { loading, error } = useSelector((state: RootState) => state.auth);
-  
+
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -28,39 +34,39 @@ const Login: React.FC = () => {
 
     try {
       await dispatch(loginUser(formData)).unwrap();
-      
+
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
-      
-      navigate('/');
+
+      navigate("/");
     } catch (error) {
       // Fallback to mock authentication for development
       const mockUser = {
-        id: '1',
+        id: "1",
         email: formData.email,
-        name: 'John Doe',
+        name: "John Doe",
         prescriptions: [],
       };
-      
-      const mockToken = 'mock-jwt-token';
-      
+
+      const mockToken = "mock-jwt-token";
+
       dispatch(loginSuccess({ user: mockUser, token: mockToken }));
-      
+
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in (demo mode).",
       });
-      
-      navigate('/');
+
+      navigate("/");
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -73,7 +79,9 @@ const Login: React.FC = () => {
             <div className="bg-gradient-primary p-3 rounded-xl">
               <Heart className="h-8 w-8 text-primary-foreground" />
             </div>
-            <span className="font-heading font-bold text-2xl text-foreground">MedSupply</span>
+            <span className="font-heading font-bold text-2xl text-foreground">
+              MedSupply
+            </span>
           </Link>
         </div>
 
@@ -84,7 +92,7 @@ const Login: React.FC = () => {
               Sign in to your account to continue shopping
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -111,7 +119,7 @@ const Login: React.FC = () => {
                   <Input
                     id="password"
                     name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleChange}
@@ -123,26 +131,30 @@ const Login: React.FC = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Link 
-                  to="/forgot-password" 
+                <Link
+                  to="/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
                   Forgot password?
                 </Link>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-primary hover:shadow-md transition-all duration-200"
                 disabled={loading}
               >
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? "Signing In..." : "Sign In"}
               </Button>
             </form>
 
@@ -150,8 +162,11 @@ const Login: React.FC = () => {
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-primary font-medium hover:underline">
+                Don't have an account?{" "}
+                <Link
+                  to="/register"
+                  className="text-primary font-medium hover:underline"
+                >
                   Sign up here
                 </Link>
               </p>

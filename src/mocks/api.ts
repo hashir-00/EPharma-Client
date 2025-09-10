@@ -1,5 +1,5 @@
-import { mockProducts, mockCategories, mockPharmacies } from './products';
-import { mockConfig } from './config';
+import { mockProducts, mockCategories, mockPharmacies } from "./products";
+import { mockConfig } from "./config";
 
 // Utility to simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -18,13 +18,13 @@ export const mockAPI = {
     limit?: number;
   }) {
     if (mockConfig.logRequests) {
-      console.log('Mock API: getProducts called with params:', params);
+      console.log("Mock API: getProducts called with params:", params);
     }
-    
+
     await delay(mockConfig.delayMs);
-    
+
     if (shouldFail()) {
-      throw new Error('Mock API: Network error');
+      throw new Error("Mock API: Network error");
     }
 
     let filtered = [...mockProducts];
@@ -32,19 +32,24 @@ export const mockAPI = {
     // Apply filters
     if (params?.search) {
       const searchLower = params.search.toLowerCase();
-      filtered = filtered.filter(product => 
-        product.name.toLowerCase().includes(searchLower) ||
-        product.description.toLowerCase().includes(searchLower) ||
-        product.genericName?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        product =>
+          product.name.toLowerCase().includes(searchLower) ||
+          product.description.toLowerCase().includes(searchLower) ||
+          product.genericName?.toLowerCase().includes(searchLower)
       );
     }
 
     if (params?.category) {
-      filtered = filtered.filter(product => product.category === params.category);
+      filtered = filtered.filter(
+        product => product.category === params.category
+      );
     }
 
     if (params?.pharmacy) {
-      filtered = filtered.filter(product => product.pharmacy === params.pharmacy);
+      filtered = filtered.filter(
+        product => product.pharmacy === params.pharmacy
+      );
     }
 
     // Pagination
@@ -61,64 +66,64 @@ export const mockAPI = {
         page,
         limit,
         totalPages: Math.ceil(filtered.length / limit),
-      }
+      },
     };
   },
 
   async getCategories() {
     if (mockConfig.logRequests) {
-      console.log('Mock API: getCategories called');
+      console.log("Mock API: getCategories called");
     }
-    
+
     await delay(mockConfig.delayMs);
-    
+
     if (shouldFail()) {
-      throw new Error('Mock API: Network error');
+      throw new Error("Mock API: Network error");
     }
 
     return {
       data: {
-        categories: mockCategories
-      }
+        categories: mockCategories,
+      },
     };
   },
 
   async getPharmacies() {
     if (mockConfig.logRequests) {
-      console.log('Mock API: getPharmacies called');
+      console.log("Mock API: getPharmacies called");
     }
-    
+
     await delay(mockConfig.delayMs);
-    
+
     if (shouldFail()) {
-      throw new Error('Mock API: Network error');
+      throw new Error("Mock API: Network error");
     }
 
     return {
       data: {
-        pharmacies: mockPharmacies
-      }
+        pharmacies: mockPharmacies,
+      },
     };
   },
 
   async getProductById(id: string) {
     if (mockConfig.logRequests) {
-      console.log('Mock API: getProductById called with id:', id);
+      console.log("Mock API: getProductById called with id:", id);
     }
-    
+
     await delay(mockConfig.delayMs);
-    
+
     if (shouldFail()) {
-      throw new Error('Mock API: Network error');
+      throw new Error("Mock API: Network error");
     }
 
     const product = mockProducts.find(p => p.id === id);
     if (!product) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
 
     return {
-      data: product
+      data: product,
     };
   },
 };

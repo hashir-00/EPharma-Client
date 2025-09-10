@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Mail, Heart, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Mail, Heart, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 const ForgotPassword: React.FC = () => {
   const { toast } = useToast();
-  
-  const [email, setEmail] = useState('');
+
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
@@ -21,7 +27,7 @@ const ForgotPassword: React.FC = () => {
     try {
       // Mock password reset - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       setEmailSent(true);
       toast({
         title: "Reset Email Sent",
@@ -47,41 +53,46 @@ const ForgotPassword: React.FC = () => {
             <div className="bg-gradient-primary p-3 rounded-xl">
               <Heart className="h-8 w-8 text-primary-foreground" />
             </div>
-            <span className="font-heading font-bold text-2xl text-foreground">MedSupply</span>
+            <span className="font-heading font-bold text-2xl text-foreground">
+              MedSupply
+            </span>
           </Link>
         </div>
 
         <Card className="bg-gradient-card shadow-medical border-border/50">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">
-              {emailSent ? 'Check Your Email' : 'Reset Password'}
+              {emailSent ? "Check Your Email" : "Reset Password"}
             </CardTitle>
             <CardDescription>
-              {emailSent 
-                ? 'We\'ve sent you password reset instructions'
-                : 'Enter your email to receive reset instructions'
-              }
+              {emailSent
+                ? "We've sent you password reset instructions"
+                : "Enter your email to receive reset instructions"}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {emailSent ? (
               <div className="text-center space-y-6">
                 <div className="bg-success/10 p-6 rounded-xl">
                   <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
-                  <p className="text-success font-medium mb-2">Email Sent Successfully</p>
+                  <p className="text-success font-medium mb-2">
+                    Email Sent Successfully
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    We've sent password reset instructions to <strong>{email}</strong>
+                    We've sent password reset instructions to{" "}
+                    <strong>{email}</strong>
                   </p>
                 </div>
-                
+
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Didn't receive the email? Check your spam folder or try again.
+                    Didn't receive the email? Check your spam folder or try
+                    again.
                   </p>
-                  
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     onClick={() => setEmailSent(false)}
                     className="w-full"
                   >
@@ -100,26 +111,26 @@ const ForgotPassword: React.FC = () => {
                       type="email"
                       placeholder="Enter your email address"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={e => setEmail(e.target.value)}
                       className="pl-10"
                       required
                     />
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-gradient-primary hover:shadow-md transition-all duration-200"
                   disabled={loading}
                 >
-                  {loading ? 'Sending...' : 'Send Reset Instructions'}
+                  {loading ? "Sending..." : "Send Reset Instructions"}
                 </Button>
               </form>
             )}
 
             <div className="text-center space-y-4">
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="inline-flex items-center text-sm text-primary hover:underline"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
@@ -130,7 +141,7 @@ const ForgotPassword: React.FC = () => {
         </Card>
 
         <p className="text-xs text-center text-muted-foreground mt-6">
-          Remember your password?{' '}
+          Remember your password?{" "}
           <Link to="/login" className="text-primary hover:underline">
             Sign in here
           </Link>

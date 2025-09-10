@@ -1,46 +1,103 @@
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { User, Mail, Phone, MapPin, Upload, FileText, Save, Edit, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import Layout from '@/components/Layout/Layout';
-import { RootState, AppDispatch } from '@/store';
-import { updateUserProfile } from '@/store/slices/authSlice';
-import { useToast } from '@/hooks/use-toast';
+import React, { useEffect, useState, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { User, Mail, Phone, MapPin, Save, Edit, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+// import { Textarea } from '@/components/ui/textarea';
+import Layout from "@/components/Layout/Layout";
+import { RootState, AppDispatch } from "@/store";
+import { updateUserProfile, getUserProfile } from "@/store/slices/authSlice";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
-  
+
   const { user } = useSelector((state: RootState) => state.auth);
-  
+
+  // Function to safely parse address
+  const parseUserAddress = (addressString?: string) => {
+    if (!addressString) {
+      return {
+        street: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      };
+    }
+
+    try {
+      // Try to parse as JSON first
+      const parsed = JSON.parse(addressString);
+      return {
+        street: parsed.street || "",
+        city: parsed.city || "",
+        state: parsed.state || "",
+        zipCode: parsed.zipCode || "",
+      };
+    } catch {
+      // If JSON parsing fails, treat as a simple string
+      return {
+        street: addressString,
+        city: "",
+        state: "",
+        zipCode: "",
+      };
+    }
+  };
+
+  // Function to initialize form data from user
+  const initializeFormData = useCallback((userData: typeof user) => {
+    const userAddress = parseUserAddress(userData?.address);
+
+    return {
+      name: `${userData?.firstName || ""} ${userData?.lastName || ""}`.trim(),
+      email: userData?.email || "",
+      age: userData?.age || "",
+      phone: userData?.phone || "",
+      address: userAddress,
+    };
+  }, []);
+
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    age: user?.age || '',
-    phone: user?.phone || '',
-    address: {
-      street: (typeof user?.address === 'object' ? user.address.street : '') || '',
-      city: (typeof user?.address === 'object' ? user.address.city : '') || '',
-      state: (typeof user?.address === 'object' ? user.address.state : '') || '',
-      zipCode: (typeof user?.address === 'object' ? user.address.zipCode : '') || '',
-    },
-  });
+  const [formData, setFormData] = useState(() => initializeFormData(user));
+
+  // Update formData when user data changes (after fetch or refresh)
+  useEffect(() => {
+    if (user) {
+      setFormData(initializeFormData(user));
+    }
+  }, [user, initializeFormData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Parse the name field into firstName and lastName
+      const nameParts = formData.name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
       // Convert age to number if it's a string
       const profileData = {
-        ...formData,
-        age: typeof formData.age === 'string' ? parseInt(formData.age) || undefined : formData.age,
+        firstName,
+        lastName,
+        phone: formData.phone,
+        age:
+          typeof formData.age === "string"
+            ? parseInt(formData.age) || undefined
+            : formData.age,
+        address: JSON.stringify({
+          street: formData.address.street,
+          city: formData.address.city,
+          state: formData.address.state,
+          zipCode: formData.address.zipCode,
+        }),
       };
+
       await dispatch(updateUserProfile(profileData)).unwrap();
       setIsEditing(false);
       toast({
@@ -48,6 +105,7 @@ const Profile: React.FC = () => {
         description: "Your profile information has been successfully updated.",
       });
     } catch (error) {
+      console.error("Profile update error:", error);
       toast({
         title: "Update Failed",
         description: "Failed to update profile. Please try again.",
@@ -56,11 +114,13 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    
-    if (name.startsWith('address.')) {
-      const addressField = name.split('.')[1];
+
+    if (name.startsWith("address.")) {
+      const addressField = name.split(".")[1];
       setFormData(prev => ({
         ...prev,
         address: {
@@ -76,16 +136,25 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Mock prescription upload
-      toast({
-        title: "Prescription Uploaded",
-        description: `${file.name} has been uploaded successfully.`,
-      });
-    }
+  const emailStatus = {
+    verified: user?.isEmailVerified,
+    bgColor: user?.isEmailVerified
+      ? "bg-success/10 text-success border-success/20"
+      : "bg-destructive/10 text-destructive border-destructive/20",
+    text: user?.isEmailVerified ? "Verified" : "Unverified",
   };
+
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+      })
+    : "N/A";
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    dispatch(getUserProfile());
+  }, [dispatch]);
 
   return (
     <Layout>
@@ -93,7 +162,9 @@ const Profile: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">My Profile</h1>
-            <p className="text-muted-foreground">Manage your account information and prescriptions</p>
+            <p className="text-muted-foreground">
+              Manage your account information and prescriptions
+            </p>
           </div>
           <Button
             onClick={() => setIsEditing(!isEditing)}
@@ -192,7 +263,7 @@ const Profile: React.FC = () => {
                       <MapPin className="mr-2 h-4 w-4" />
                       Address Information
                     </Label>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="address.street">Street Address</Label>
                       <Input
@@ -247,8 +318,8 @@ const Profile: React.FC = () => {
                         <Save className="mr-2 h-4 w-4" />
                         Save Changes
                       </Button>
-                      <Button 
-                        type="button" 
+                      <Button
+                        type="button"
                         variant="outline"
                         onClick={() => setIsEditing(false)}
                       >
@@ -265,73 +336,24 @@ const Profile: React.FC = () => {
           <div className="space-y-6">
             <Card className="bg-gradient-card border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Prescriptions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center p-6 border-2 border-dashed border-border rounded-lg">
-                  <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Upload prescription documents
-                  </p>
-                  <input
-                    type="file"
-                    id="prescription-upload"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('prescription-upload')?.click()}
-                  >
-                    Choose File
-                  </Button>
-                </div>
-
-                {user?.prescriptions && user.prescriptions.length > 0 ? (
-                  <div className="space-y-2">
-                    {user.prescriptions.map((prescription, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-accent/50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">Prescription {index + 1}</span>
-                        </div>
-                        <Badge variant="secondary" className="bg-success/10 text-success">
-                          Verified
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center">
-                    No prescriptions uploaded yet
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-card border-border/50">
-              <CardHeader>
                 <CardTitle>Account Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Email Verified</span>
-                  <Badge className="bg-success/10 text-success border-success/20">
-                    Verified
+                  <span className="text-sm">Email Status</span>
+                  <Badge className={emailStatus.bgColor}>
+                    {emailStatus.text}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                   <span className="text-sm">Account Type</span>
                   <Badge variant="secondary">Regular</Badge>
-                </div>
+                </div> */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Member Since</span>
-                  <span className="text-sm text-muted-foreground">Jan 2024</span>
+                  <span className="text-sm text-muted-foreground">
+                    {memberSince}
+                  </span>
                 </div>
               </CardContent>
             </Card>

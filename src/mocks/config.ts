@@ -1,18 +1,18 @@
 // Mock mode configuration
-export const MOCK_MODE = import.meta.env.VITE_MOCK_MODE === 'true';
+export const MOCK_MODE = import.meta.env.VITE_MOCK_MODE === "true";
 
 // Debug logging for mock mode status
-if (typeof window !== 'undefined') {
-  console.log('🔧 Mock Mode Debug:', {
+if (typeof window !== "undefined") {
+  console.log("🔧 Mock Mode Debug:", {
     VITE_MOCK_MODE: import.meta.env.VITE_MOCK_MODE,
     MOCK_MODE: MOCK_MODE,
-    MODE: import.meta.env.MODE
+    MODE: import.meta.env.MODE,
   });
 }
 
 // Environment check utility
-export const isDevelopment = import.meta.env.MODE === 'development';
-export const isProduction = import.meta.env.MODE === 'production';
+export const isDevelopment = import.meta.env.MODE === "development";
+export const isProduction = import.meta.env.MODE === "production";
 
 // Mock configuration options
 export const mockConfig = {

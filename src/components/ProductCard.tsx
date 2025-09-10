@@ -1,14 +1,19 @@
-import React from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Star, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Product, getPharmacyName, isProductInStock, getStockDisplay } from '@/store/slices/productsSlice';
-import { addToCart } from '@/store/slices/cartSlice';
-import { useToast } from '@/hooks/use-toast';
-import { AppDispatch } from '@/store';
+import React from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { ShoppingCart, Star, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Product,
+  getPharmacyName,
+  isProductInStock,
+  getStockDisplay,
+} from "@/store/slices/productsSlice";
+import { addToCart } from "@/store/slices/cartSlice";
+import { useToast } from "@/hooks/use-toast";
+import { AppDispatch } from "@/store";
 
 interface ProductCardProps {
   product: Product;
@@ -21,16 +26,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.image,
-      pharmacy: getPharmacyName(product.pharmacy),
-      requiresPrescription: product.requiresPrescription,
-    }));
-    
+    dispatch(
+      addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        image: product.image,
+        pharmacy: getPharmacyName(product.pharmacy),
+        requiresPrescription: product.requiresPrescription,
+      })
+    );
+
     toast({
       title: "Added to Cart",
       description: `${product.name} has been added to your cart.`,
@@ -42,7 +49,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    <Card 
+    <Card
       className="group cursor-pointer transition-all duration-300 hover:shadow-medical hover:scale-[1.02] bg-gradient-card border-border/50"
       onClick={handleCardClick}
     >
@@ -54,55 +61,66 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
         </div>
-        
+
         <div className="space-y-2">
           <div className="flex items-start justify-between">
             <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
               {product.name}
             </h3>
             {product.requiresPrescription && (
-              <Badge variant="secondary" className="ml-2 bg-warning/10 text-warning border-warning/20">
+              <Badge
+                variant="secondary"
+                className="ml-2 bg-warning/10 text-warning border-warning/20"
+              >
                 <FileText className="h-3 w-3 mr-1" />
                 Rx
               </Badge>
             )}
           </div>
-          
+
           <p className="text-sm text-muted-foreground line-clamp-2">
             {product.description}
           </p>
-          
+
           <div className="flex items-center space-x-1 text-sm text-muted-foreground">
             <Star className="h-3 w-3 fill-warning text-warning" />
             <span>4.8 (124)</span>
           </div>
-          
+
           <div className="text-xs text-muted-foreground">
             <span className="font-medium">
               {getPharmacyName(product.pharmacy)}
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between pt-2">
             <div className="space-y-1">
-              <p className="text-2xl font-bold text-primary">${product.price}</p>
+              <p className="text-2xl font-bold text-primary">
+                ${product.price}
+              </p>
               {product.dosage && (
-                <p className="text-xs text-muted-foreground">{product.dosage}</p>
+                <p className="text-xs text-muted-foreground">
+                  {product.dosage}
+                </p>
               )}
             </div>
-            
-            <Badge 
+
+            <Badge
               variant={isProductInStock(product) ? "secondary" : "destructive"}
-              className={isProductInStock(product) ? "bg-success/10 text-success border-success/20" : ""}
+              className={
+                isProductInStock(product)
+                  ? "bg-success/10 text-success border-success/20"
+                  : ""
+              }
             >
               {getStockDisplay(product)}
             </Badge>
           </div>
         </div>
       </CardContent>
-      
+
       <CardFooter className="p-4 pt-0">
-        <Button 
+        <Button
           className="w-full bg-gradient-primary hover:shadow-md transition-all duration-200"
           onClick={handleAddToCart}
           disabled={!product.stockQuantity || product.stockQuantity <= 0}

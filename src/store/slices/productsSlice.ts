@@ -1,6 +1,12 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { productsAPI } from '@/services/api';
-import { mockAPI, mockProducts, mockCategories, mockPharmacies, MOCK_MODE } from '@/mocks';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { productsAPI } from "@/services/api";
+import {
+  mockAPI,
+  mockProducts,
+  mockCategories,
+  mockPharmacies,
+  MOCK_MODE,
+} from "@/mocks";
 
 export interface Product {
   id: string;
@@ -44,7 +50,7 @@ interface ProductsState {
   selectedCategory: string;
   selectedPharmacy: string;
   categories: string[];
-  pharmacies: Pharmacy[];
+  pharmacies: string[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -59,9 +65,9 @@ const initialState: ProductsState = {
   loading: false,
   loadingMore: false,
   error: null,
-  searchQuery: '',
-  selectedCategory: '',
-  selectedPharmacy: '',
+  searchQuery: "",
+  selectedCategory: "",
+  selectedPharmacy: "",
   categories: [],
   pharmacies: [],
   pagination: {
@@ -74,7 +80,7 @@ const initialState: ProductsState = {
 
 // Utility function to get pharmacy name from either string or object
 export const getPharmacyName = (pharmacy: string | Pharmacy): string => {
-  return typeof pharmacy === 'string' ? pharmacy : pharmacy.name;
+  return typeof pharmacy === "string" ? pharmacy : pharmacy.name;
 };
 
 // Utility function to check if product is in stock (handles both legacy and new format)
@@ -95,21 +101,24 @@ export const getStockDisplay = (product: Product): string => {
 
 // Async thunks for API calls
 export const fetchProducts = createAsyncThunk(
-  'products/fetchProducts',
-  async (params: {
-    search?: string;
-    category?: string;
-    pharmacy?: string;
-    page?: number;
-    limit?: number;
-  } = {}, { rejectWithValue }) => {
+  "products/fetchProducts",
+  async (
+    params: {
+      search?: string;
+      category?: string;
+      pharmacy?: string;
+      page?: number;
+      limit?: number;
+    } = {},
+    { rejectWithValue }
+  ) => {
     try {
       // Use mock API if mock mode is enabled
       if (MOCK_MODE) {
         const response = await mockAPI.getProducts(params);
         return response.data;
       }
-      
+
       const response = await productsAPI.getProducts(params);
       // Handle different response structures
       const data = response.data.data || response.data;
@@ -120,10 +129,10 @@ export const fetchProducts = createAsyncThunk(
         totalPages: data.totalPages || 1,
       };
     } catch (error: unknown) {
-      console.warn('Failed to fetch products from API');
+      console.warn("Failed to fetch products from API");
       // Only fallback to mock data if mock mode is enabled
       if (MOCK_MODE) {
-        console.log('Using mock data as fallback');
+        console.log("Using mock data as fallback");
         return {
           products: mockProducts,
           total: mockProducts.length,
@@ -132,27 +141,32 @@ export const fetchProducts = createAsyncThunk(
         };
       }
       // In non-mock mode, return empty results or re-throw the error
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch products');
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to fetch products"
+      );
     }
   }
 );
 
 export const loadMoreProducts = createAsyncThunk(
-  'products/loadMoreProducts',
-  async (params: {
-    search?: string;
-    category?: string;
-    pharmacy?: string;
-    page: number;
-    limit?: number;
-  }, { rejectWithValue }) => {
+  "products/loadMoreProducts",
+  async (
+    params: {
+      search?: string;
+      category?: string;
+      pharmacy?: string;
+      page: number;
+      limit?: number;
+    },
+    { rejectWithValue }
+  ) => {
     try {
       // Use mock API if mock mode is enabled
       if (MOCK_MODE) {
         const response = await mockAPI.getProducts(params);
         return response.data;
       }
-      
+
       const response = await productsAPI.getProducts(params);
       // Handle different response structures
       const data = response.data.data || response.data;
@@ -163,15 +177,17 @@ export const loadMoreProducts = createAsyncThunk(
         totalPages: data.totalPages || 1,
       };
     } catch (error: unknown) {
-      console.warn('Failed to load more products from API');
+      console.warn("Failed to load more products from API");
       // In non-mock mode, return empty results or re-throw the error
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to load more products');
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to load more products"
+      );
     }
   }
 );
 
 export const fetchCategories = createAsyncThunk(
-  'products/fetchCategories',
+  "products/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
       // Use mock API if mock mode is enabled
@@ -179,24 +195,26 @@ export const fetchCategories = createAsyncThunk(
         const response = await mockAPI.getCategories();
         return response.data.categories;
       }
-      
+
       const response = await productsAPI.getCategories();
       return response.data.data?.categories || response.data.categories || [];
     } catch (error: unknown) {
-      console.warn('Failed to fetch categories from API');
+      console.warn("Failed to fetch categories from API");
       // Only fallback to mock data if mock mode is enabled
       if (MOCK_MODE) {
-        console.log('Using mock categories as fallback');
+        console.log("Using mock categories as fallback");
         return mockCategories;
       }
       // In non-mock mode, return empty array or re-throw the error
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch categories');
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to fetch categories"
+      );
     }
   }
 );
 
 export const fetchPharmacies = createAsyncThunk(
-  'products/fetchPharmacies',
+  "products/fetchPharmacies",
   async (_, { rejectWithValue }) => {
     try {
       // Use mock API if mock mode is enabled
@@ -204,24 +222,26 @@ export const fetchPharmacies = createAsyncThunk(
         const response = await mockAPI.getPharmacies();
         return response.data.pharmacies;
       }
-      
+
       const response = await productsAPI.getPharmacies();
       return response.data.data?.pharmacies || response.data.pharmacies || [];
     } catch (error: unknown) {
-      console.warn('Failed to fetch pharmacies from API');
+      console.warn("Failed to fetch pharmacies from API");
       // Only fallback to mock data if mock mode is enabled
       if (MOCK_MODE) {
-        console.log('Using mock pharmacies as fallback');
+        console.log("Using mock pharmacies as fallback");
         return mockPharmacies;
       }
       // In non-mock mode, return empty array or re-throw the error
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch pharmacies');
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to fetch pharmacies"
+      );
     }
   }
 );
 
 const productsSlice = createSlice({
-  name: 'products',
+  name: "products",
   initialState,
   reducers: {
     setSearchQuery: (state, action: PayloadAction<string>) => {
@@ -236,17 +256,17 @@ const productsSlice = createSlice({
       state.selectedPharmacy = action.payload;
       state.filteredItems = filterProducts(state);
     },
-    clearFilters: (state) => {
-      state.searchQuery = '';
-      state.selectedCategory = '';
-      state.selectedPharmacy = '';
+    clearFilters: state => {
+      state.searchQuery = "";
+      state.selectedCategory = "";
+      state.selectedPharmacy = "";
       state.filteredItems = state.items;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
       // Fetch Products
-      .addCase(fetchProducts.pending, (state) => {
+      .addCase(fetchProducts.pending, state => {
         state.loading = true;
         state.error = null;
       })
@@ -259,7 +279,8 @@ const productsSlice = createSlice({
         state.pagination.currentPage = action.payload.page || 1;
         state.pagination.totalPages = action.payload.totalPages || 1;
         state.pagination.total = action.payload.total || products.length;
-        state.pagination.hasMore = state.pagination.currentPage < state.pagination.totalPages;
+        state.pagination.hasMore =
+          state.pagination.currentPage < state.pagination.totalPages;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
@@ -273,7 +294,7 @@ const productsSlice = createSlice({
         state.filteredItems = filterProducts(state);
       })
       // Load More Products
-      .addCase(loadMoreProducts.pending, (state) => {
+      .addCase(loadMoreProducts.pending, state => {
         state.loadingMore = true;
         state.error = null;
       })
@@ -286,7 +307,8 @@ const productsSlice = createSlice({
         state.pagination.currentPage = action.payload.page || 1;
         state.pagination.totalPages = action.payload.totalPages || 1;
         state.pagination.total = action.payload.total || products.length;
-        state.pagination.hasMore = state.pagination.currentPage < state.pagination.totalPages;
+        state.pagination.hasMore =
+          state.pagination.currentPage < state.pagination.totalPages;
       })
       .addCase(loadMoreProducts.rejected, (state, action) => {
         state.loadingMore = false;
@@ -320,7 +342,7 @@ const productsSlice = createSlice({
         state.error = action.payload as string;
         // Only use mock data as fallback if mock mode is enabled
         if (MOCK_MODE) {
-          state.pharmacies = mockPharmacies;
+          state.pharmacies = [];
         } else {
           state.pharmacies = []; // Keep empty array when API fails in non-mock mode
         }
@@ -330,24 +352,36 @@ const productsSlice = createSlice({
 
 const filterProducts = (state: ProductsState) => {
   let filtered = [...state.items];
-  
+
   if (state.searchQuery) {
-    filtered = filtered.filter(product => 
-      product.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(state.searchQuery.toLowerCase())
+    filtered = filtered.filter(
+      product =>
+        product.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+        product.description
+          .toLowerCase()
+          .includes(state.searchQuery.toLowerCase())
     );
   }
-  
+
   if (state.selectedCategory) {
-    filtered = filtered.filter(product => product.category === state.selectedCategory);
+    filtered = filtered.filter(
+      product => product.category === state.selectedCategory
+    );
   }
-  
+
   if (state.selectedPharmacy) {
-    filtered = filtered.filter(product => getPharmacyName(product.pharmacy) === state.selectedPharmacy);
+    filtered = filtered.filter(
+      product => getPharmacyName(product.pharmacy) === state.selectedPharmacy
+    );
   }
-  
+
   return filtered;
 };
 
-export const { setSearchQuery, setSelectedCategory, setSelectedPharmacy, clearFilters } = productsSlice.actions;
+export const {
+  setSearchQuery,
+  setSelectedCategory,
+  setSelectedPharmacy,
+  clearFilters,
+} = productsSlice.actions;
 export default productsSlice.reducer;
