@@ -47,6 +47,8 @@ export const loginUser = createAsyncThunk(
       const data = response.data.data || response.data;
       const { user, token } = data;
       localStorage.setItem("token", token);
+      localStorage.setItem("sessionId", token);
+
       return { user, token };
     } catch (error: unknown) {
       let message = "Login failed";
@@ -130,16 +132,14 @@ export const registerUser = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
-  async (_, { rejectWithValue }) => {
+  async (_, ) => {
     try {
       await authAPI.logout();
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
       return null;
     } catch (error: unknown) {
       // Even if API call fails, clear local storage
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
       return null;
     }
   }

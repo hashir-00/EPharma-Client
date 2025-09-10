@@ -53,7 +53,8 @@ const Cart: React.FC = () => {
     }
     navigate("/checkout");
   };
-
+  const cart = localStorage.getItem("cart");
+  console.log("Cart from localStorage:", cart);
   const prescriptionRequired = items.some(item => item.requiresPrescription);
 
   if (items.length === 0) {
@@ -189,11 +190,11 @@ const Cart: React.FC = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-primary">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              ${Number(item.price * item.quantity).toFixed(2)}
                             </p>
                             {item.quantity > 1 && (
                               <p className="text-xs text-muted-foreground">
-                                ${item.price.toFixed(2)} each
+                                ${Number(item.price).toFixed(2)} each
                               </p>
                             )}
                           </div>
@@ -216,7 +217,7 @@ const Cart: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal ({items.length} items)</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>${Number(total).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
@@ -224,7 +225,7 @@ const Cart: React.FC = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Tax</span>
-                    <span>${(total * 0.08).toFixed(2)}</span>
+                    <span>${Number(total * 0.08).toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -233,7 +234,7 @@ const Cart: React.FC = () => {
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
                   <span className="text-primary">
-                    ${(total * 1.08).toFixed(2)}
+                    ${Number(total * 1.08).toFixed(2)}
                   </span>
                 </div>
 
