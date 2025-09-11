@@ -60,7 +60,7 @@ const Home: React.FC = () => {
                     onClick={() => navigate("/marketplace")}
                     size="lg"
                     variant="outline"
-                    className="border-white text-white hover:bg-white hover:text-primary"
+                    className="border-white text-primary hover:bg-blue-100"
                   >
                     Browse Products
                   </Button>
@@ -182,7 +182,7 @@ const Home: React.FC = () => {
                   onClick={() => navigate("/register")}
                   size="lg"
                   variant="outline"
-                  className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                  className="border-primary-foreground text-primary hover:bg-primary-foreground hover:text-green-500"
                 >
                   Sign Up Now
                 </Button>
