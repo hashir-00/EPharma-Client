@@ -1,5 +1,6 @@
 import axios from "axios";
 import { mockAPI, MOCK_MODE } from "@/mocks";
+import { User } from "@/store/slices/authSlice";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/v1";
@@ -11,6 +12,7 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
+  timeout: 10000, // 10 seconds timeout
 });
 
 // Request interceptor to add auth token
@@ -34,10 +36,16 @@ api.interceptors.response.use(
   },
   error => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+      // Only redirect to login if this is not a login request and user has a token
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      const hasToken = localStorage.getItem("token");
+      
+      if (!isLoginRequest && hasToken) {
+        // Token expired or invalid for authenticated requests
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
@@ -72,6 +80,8 @@ export const usersAPI = {
   getProfile: () => api.get("/users/profile"),
   updateProfile: (userData: Record<string, unknown>) =>
     api.put("/users/profile", userData),
+  updatePassword: (userData: { oldPassword: string; newPassword: string }) =>
+    api.post("/users/change-password", userData),
 
   uploadPrescription: (formData: FormData) =>
     api.post("/users/prescriptions", formData, {
@@ -79,6 +89,7 @@ export const usersAPI = {
         "Content-Type": "multipart/form-data",
       },
     }),
+    deactivateAccount: (user: Partial<User>) => api.post("/users/deactivate", user),
 
   getPrescriptions: () => api.get("/users/prescriptions"),
 };

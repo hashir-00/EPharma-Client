@@ -1,6 +1,4 @@
-import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 import {
   ArrowLeft,
   CreditCard,
@@ -24,135 +22,35 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/Layout/Layout";
-import { RootState } from "@/store";
-import { createOrder } from "@/store/slices/ordersSlice";
-import { clearCart } from "@/store/slices/cartSlice";
-import { useToast } from "@/hooks/use-toast";
+import { useCheckoutHooks } from "./useCheckoutHooks";
 
 const Checkout: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { toast } = useToast();
+  const { state, actions, data } = useCheckoutHooks();
+  
+  const {
+    loading,
+    shippingAddress,
+    paymentMethod,
+    prescriptionUploaded,
+    prescriptionRequired,
+    taxAmount,
+    finalTotal,
+  } = state;
 
-  const { items, total } = useSelector((state: RootState) => state.cart);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const {
+    handleAddressChange,
+    handleStateChange,
+    handlePaymentMethodChange,
+    handleFileUpload,
+    handlePlaceOrder,
+    goBack,
+    triggerFileUpload,
+  } = actions;
 
-    // Function to safely parse address
-  const parseUserAddress = (addressString?: string) => {
-    if (!addressString) {
-      return {
-        street: "",
-        city: "",
-        state: "",
-        zipCode: "",
-      };
-    }
+  const { items, total } = data;
 
-    try {
-      // Try to parse as JSON first
-      const parsed = JSON.parse(addressString);
-      return {
-        street: parsed.street || "",
-        city: parsed.city || "",
-        state: parsed.state || "",
-        zipCode: parsed.zipCode || "",
-      };
-    } catch {
-      // If JSON parsing fails, treat as a simple string
-      return {
-        street: addressString,
-        city: "",
-        state: "",
-        zipCode: "",
-      };
-    }
-  };
-
-  const [loading, setLoading] = useState(false);
-  const [shippingAddress, setShippingAddress] = useState({
-    street: user?.address ? parseUserAddress(user.address).street : "",
-    city: user?.address ? parseUserAddress(user.address).city : "",
-    state: user?.address ? parseUserAddress(user.address).state : "",
-    zipCode: user?.address ? parseUserAddress(user.address).zipCode : "",
-  });
-  const [paymentMethod, setPaymentMethod] = useState("card");
-  const [prescriptionUploaded, setPrescriptionUploaded] = useState(false);
-
-  const prescriptionRequired = items.some(item => item.requiresPrescription);
-  const taxAmount = total * 0.08;
-  const finalTotal = total + taxAmount;
-
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setShippingAddress(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPrescriptionUploaded(true);
-      toast({
-        title: "Prescription Uploaded",
-        description: `${file.name} has been uploaded successfully.`,
-      });
-    }
-  };
-
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (prescriptionRequired && !prescriptionUploaded) {
-      toast({
-        title: "Prescription Required",
-        description:
-          "Please upload your prescription before placing the order.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Mock order placement
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const newOrder = {
-        items,
-        total: finalTotal,
-        shippingAddress,
-        prescriptionUploaded,
-        estimatedDelivery: new Date(
-          Date.now() + 3 * 24 * 60 * 60 * 1000
-        ).toISOString(), // 3 days from now
-      };
-
-      dispatch(createOrder(newOrder));
-      dispatch(clearCart());
-
-      toast({
-        title: "Order Placed Successfully!",
-        description:
-          "Your order has been placed and you will receive a confirmation email shortly.",
-      });
-
-      navigate("/orders");
-    } catch (error) {
-      toast({
-        title: "Order Failed",
-        description: "There was an error placing your order. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Early return if cart is empty (handled in hook)
   if (items.length === 0) {
-    navigate("/cart");
     return null;
   }
 
@@ -163,7 +61,7 @@ const Checkout: React.FC = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/cart")}
+            onClick={goBack}
             className="p-0 text-primary hover:text-primary/80"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -212,9 +110,7 @@ const Checkout: React.FC = () => {
                     <Label htmlFor="state">State</Label>
                     <Select
                       value={shippingAddress.state}
-                      onValueChange={value =>
-                        setShippingAddress(prev => ({ ...prev, state: value }))
-                      }
+                      onValueChange={handleStateChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select state" />
@@ -281,9 +177,7 @@ const Checkout: React.FC = () => {
                     <Button
                       type="button"
                       variant={prescriptionUploaded ? "default" : "outline"}
-                      onClick={() =>
-                        document.getElementById("prescription-upload")?.click()
-                      }
+                      onClick={triggerFileUpload}
                       className={
                         prescriptionUploaded
                           ? "bg-success text-success-foreground"
@@ -308,7 +202,7 @@ const Checkout: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <Select value={paymentMethod} onValueChange={handlePaymentMethodChange}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

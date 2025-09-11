@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff, Heart, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,62 +12,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { loginUser, loginSuccess } from "@/store/slices/authSlice";
-import { useToast } from "@/hooks/use-toast";
-import { RootState, AppDispatch } from "@/store";
+import { useLoginHooks } from "./useLoginHooks";
 
 const Login: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const { toast } = useToast();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      await dispatch(loginUser(formData)).unwrap();
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
-
-      navigate("/");
-    } catch (error) {
-      // Fallback to mock authentication for development
-      const mockUser = {
-        id: "1",
-        email: formData.email,
-        name: "John Doe",
-        prescriptions: [],
-      };
-
-      const mockToken = "mock-jwt-token";
-
-      dispatch(loginSuccess({ user: mockUser, token: mockToken }));
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in (demo mode).",
-      });
-
-      navigate("/");
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  const {
+    formData,
+    showPassword,
+    loading,
+    handleSubmit,
+    handleChange,
+    setShowPassword,
+  } = useLoginHooks();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-light/20 via-background to-secondary-light/20 flex items-center justify-center p-4">

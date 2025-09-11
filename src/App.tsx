@@ -13,11 +13,11 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
-import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
+import Cart from "./pages/Cart";
 
 const queryClient = new QueryClient();
 

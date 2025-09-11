@@ -1,64 +1,43 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { Package, Clock, CheckCircle, Truck, Eye } from "lucide-react";
+import { Eye, CheckCircle, Clock, Truck, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Layout from "@/components/Layout/Layout";
-import { RootState } from "@/store";
+import { useOrdersHooks } from "./useOrdersHooks";
 import { Order } from "@/store/slices/ordersSlice";
 
 const Orders: React.FC = () => {
-  const navigate = useNavigate();
-  const { orders } = useSelector((state: RootState) => state.orders);
+  const {
+    navigate,
+    orders,
+    getStatusColor,
+    formatDate,
+  } = useOrdersHooks();
 
-  const getStatusIcon = (status: Order["status"]) => {
-    switch (status) {
-      case "Pending":
-        return <Clock className="h-4 w-4" />;
-      case "Approved":
-        return <CheckCircle className="h-4 w-4" />;
-      case "Shipped":
-        return <Truck className="h-4 w-4" />;
-      case "Delivered":
-        return <Package className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
-  };
-
-  const getStatusColor = (status: Order["status"]) => {
-    switch (status) {
-      case "Pending":
-        return "bg-warning/10 text-warning border-warning/20";
-      case "Approved":
-        return "bg-primary/10 text-primary border-primary/20";
-      case "Shipped":
-        return "bg-secondary/10 text-secondary border-secondary/20";
-      case "Delivered":
-        return "bg-success/10 text-success border-success/20";
-      default:
-        return "bg-muted/10 text-muted-foreground border-muted/20";
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
+    const getStatusIcon = (status: Order["status"]) => {
+      switch (status) {
+        case "Pending":
+          return <Clock className="h-4 w-4" />;
+        case "Approved":
+          return <CheckCircle className="h-4 w-4" />;
+        case "Shipped":
+          return <Truck className="h-4 w-4" />;
+        case "Delivered":
+          return <Package className="h-4 w-4" />;
+        default:
+          return <Clock className="h-4 w-4" />;
+      }
+    };
+  
   if (orders.length === 0) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-12">
           <div className="text-center max-w-md mx-auto">
             <div className="bg-accent/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-              <Package className="h-12 w-12 text-muted-foreground" />
+              <CheckCircle className="h-12 w-12 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-4">
               No orders yet

@@ -1,6 +1,4 @@
-import React, { useEffect, useCallback, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 import {
   Search,
   Filter,
@@ -24,30 +22,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/Layout/Layout";
 import ProductCard from "@/components/ProductCard";
-import { RootState, AppDispatch } from "@/store";
+import { useMarketplaceHooks } from "./useMarketplaceHooks";
 import {
-  setSearchQuery,
-  setSelectedCategory,
-  setSelectedPharmacy,
-  fetchProducts,
-  fetchCategories,
-  fetchPharmacies,
-  loadMoreProducts,
   getPharmacyName,
   isProductInStock,
   getStockDisplay,
 } from "@/store/slices/productsSlice";
-import { addToCart } from "@/store/slices/cartSlice";
-import { useToast } from "@/hooks/use-toast";
-
 
 const Marketplace: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  
   const {
+    viewMode,
+    setViewMode,
     filteredItems,
     searchQuery,
     selectedCategory,
@@ -55,61 +40,16 @@ const Marketplace: React.FC = () => {
     loading,
     loadingMore,
     categories,
-    pharmacies,
     pagination,
-  } = useSelector((state: RootState) => state.products);
-
-  useEffect(() => {
-    // Load initial data
-    dispatch(fetchPharmacies());
-    dispatch(fetchProducts({}));
-    dispatch(fetchCategories());
-  }, [dispatch]);
-
-  // Debounced search effect to avoid too many API calls
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery || selectedCategory || selectedPharmacy) {
-        dispatch(
-          fetchProducts({
-            search: searchQuery,
-            category: selectedCategory,
-            pharmacy: selectedPharmacy,
-            page: 1, // Reset to first page when filters change
-          })
-        );
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [dispatch, searchQuery, selectedCategory, selectedPharmacy]);
-
-  const handleLoadMore = useCallback(() => {
-    if (!loadingMore && pagination.hasMore) {
-      dispatch(
-        loadMoreProducts({
-          search: searchQuery,
-          category: selectedCategory,
-          pharmacy: selectedPharmacy,
-          page: pagination.currentPage + 1,
-          limit: 20,
-        })
-      );
-    }
-  }, [
-    dispatch,
-    loadingMore,
-    pagination.hasMore,
-    pagination.currentPage,
-    searchQuery,
-    selectedCategory,
-    selectedPharmacy,
-  ]);
-
-  const formattedPharmacies = pharmacies.map((pharmacy: string,index) => ({
-    id: index.toString(),
-    name: pharmacy || "Unnamed Pharmacy",
-  }));
+    formattedPharmacies,
+    handleLoadMore,
+    handleSearchChange,
+    handleCategoryChange,
+    handlePharmacyChange,
+    handleAddToCart,
+    clearFilter,
+    navigate,
+  } = useMarketplaceHooks();
 
   return (
     <Layout>
@@ -134,7 +74,7 @@ const Marketplace: React.FC = () => {
               <Input
                 placeholder="Search medicines, health products..."
                 value={searchQuery}
-                onChange={e => dispatch(setSearchQuery(e.target.value))}
+                onChange={e => handleSearchChange(e.target.value)}
                 className="pl-10 bg-background/50"
               />
             </div>
@@ -142,9 +82,7 @@ const Marketplace: React.FC = () => {
             {/* Category Filter */}
             <Select
               value={selectedCategory || "all"}
-              onValueChange={value =>
-                dispatch(setSelectedCategory(value === "all" ? "" : value))
-              }
+              onValueChange={handleCategoryChange}
             >
               <SelectTrigger className="bg-background/50">
                 <SelectValue placeholder="All Categories" />
@@ -168,9 +106,7 @@ const Marketplace: React.FC = () => {
             {/* Pharmacy Filter */}
             <Select
               value={selectedPharmacy || "all"}
-              onValueChange={value =>
-                dispatch(setSelectedPharmacy(value === "all" ? "" : value))
-              }
+              onValueChange={handlePharmacyChange}
             >
               <SelectTrigger className="bg-background/50">
                 <SelectValue placeholder="All Pharmacies" />
@@ -198,7 +134,7 @@ const Marketplace: React.FC = () => {
               <Badge variant="secondary" className="bg-primary/10 text-primary">
                 Search: "{searchQuery}"
                 <button
-                  onClick={() => dispatch(setSearchQuery(""))}
+                  onClick={() => clearFilter('search')}
                   className="ml-2 text-primary/70 hover:text-primary"
                 >
                   ×
@@ -212,7 +148,7 @@ const Marketplace: React.FC = () => {
               >
                 Category: {selectedCategory}
                 <button
-                  onClick={() => dispatch(setSelectedCategory(""))}
+                  onClick={() => clearFilter('category')}
                   className="ml-2 text-secondary/70 hover:text-secondary"
                 >
                   ×
@@ -223,7 +159,7 @@ const Marketplace: React.FC = () => {
               <Badge variant="secondary" className="bg-success/10 text-success">
                 Pharmacy: {selectedPharmacy}
                 <button
-                  onClick={() => dispatch(setSelectedPharmacy(""))}
+                  onClick={() => clearFilter('pharmacy')}
                   className="ml-2 text-success/70 hover:text-success"
                 >
                   ×
@@ -371,20 +307,14 @@ const Marketplace: React.FC = () => {
                         className="bg-gradient-primary hover:shadow-md transition-all duration-200"
                         onClick={(e) => {
                           e.stopPropagation();
-                          dispatch(
-                            addToCart({
-                              id: product.id,
-                              name: product.name,
-                              price: product.price,
-                              quantity: 1,
-                              image: product.image,
-                              pharmacy: getPharmacyName(product.pharmacy),
-                              requiresPrescription: product.requiresPrescription,
-                            })
-                          );
-                          toast({
-                            title: "Added to Cart",
-                            description: `${product.name} has been added to your cart.`,
+                          handleAddToCart({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            quantity: 1,
+                            image: product.image,
+                            pharmacy: getPharmacyName(product.pharmacy),
+                            requiresPrescription: product.requiresPrescription,
                           });
                         }}
                         disabled={!product.stockQuantity || product.stockQuantity <= 0}
@@ -420,9 +350,9 @@ const Marketplace: React.FC = () => {
             {(searchQuery || selectedCategory || selectedPharmacy) && (
               <Button
                 onClick={() => {
-                  dispatch(setSearchQuery(""));
-                  dispatch(setSelectedCategory(""));
-                  dispatch(setSelectedPharmacy(""));
+                  clearFilter('search');
+                  clearFilter('category');
+                  clearFilter('pharmacy');
                 }}
                 className="mr-3"
               >

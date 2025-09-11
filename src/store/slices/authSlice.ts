@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { authAPI, usersAPI } from "@/services/api";
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name: string;
@@ -14,8 +14,8 @@ interface User {
   prescriptions?: string[];
   isActive?: boolean;
   isEmailVerified?: boolean;
+  role?: string;
 }
-
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -47,6 +47,8 @@ export const loginUser = createAsyncThunk(
       const data = response.data.data || response.data;
       const { user, token } = data;
       localStorage.setItem("token", token);
+      localStorage.setItem("sessionId", token);
+
       return { user, token };
     } catch (error: unknown) {
       let message = "Login failed";
@@ -130,16 +132,14 @@ export const registerUser = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
-  async (_, { rejectWithValue }) => {
+  async (_, ) => {
     try {
       await authAPI.logout();
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
       return null;
     } catch (error: unknown) {
       // Even if API call fails, clear local storage
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
       return null;
     }
   }
@@ -160,6 +160,19 @@ export const updateUserProfile = createAsyncThunk(
     }
   }
 );
+export const updateUserPassword = createAsyncThunk(
+  "auth/updatePassword",
+  async (userData: { oldPassword: string; newPassword: string }, { rejectWithValue }) => {
+    try {
+      const response = await usersAPI.updatePassword(userData);
+      return response.data.message;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Profile update failed";
+      return rejectWithValue(message);
+    }
+  }
+);
 
 export const getUserProfile = createAsyncThunk(
   "auth/getUserProfile",
@@ -171,6 +184,23 @@ export const getUserProfile = createAsyncThunk(
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to fetch user profile";
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const deactivateAccount = createAsyncThunk(
+  "auth/deactivateAccount",
+  async (user: Partial<User>, { rejectWithValue }) => {
+    try {
+      const response = await usersAPI.deactivateAccount(user);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      return response.data.message;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Account deactivation failed";
       return rejectWithValue(message);
     }
   }
@@ -255,6 +285,14 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = null;
       })
+      // Logout
+      .addCase(logoutUser.rejected, state => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        state.error = null;
+      })
       // Update Profile
       .addCase(updateUserProfile.pending, state => {
         state.loading = true;
@@ -280,6 +318,37 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(getUserProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+      // Update Password
+      builder
+      .addCase(updateUserPassword.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUserPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(updateUserPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+      // Deactivate Account
+      builder
+      .addCase(deactivateAccount.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deactivateAccount.fulfilled, (state, action) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(deactivateAccount.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
