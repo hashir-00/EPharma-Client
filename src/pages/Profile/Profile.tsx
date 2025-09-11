@@ -1,5 +1,14 @@
 import React from "react";
-import { User, Mail, Phone, MapPin, Save, Edit, X } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Save,
+  Edit,
+  X,
+  CircleMinus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 // import { Textarea } from '@/components/ui/textarea';
 import Layout from "@/components/Layout/Layout";
 import { useProfileHooks } from "./useProfileHooks";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const Profile: React.FC = () => {
   const {
@@ -20,6 +30,9 @@ const Profile: React.FC = () => {
     emailStatus,
     memberSince,
     handleSubmitPassword,
+    handleDeactivate,
+    openDialog,
+    setOpenDialog
   } = useProfileHooks();
 
   return (
@@ -35,25 +48,25 @@ const Profile: React.FC = () => {
           <div className="w-full sm:w-auto">
             <Button
               onClick={() =>
-          setIsEditing({
-            ...isEditing,
-            personalInfo: !isEditing.personalInfo,
-          })
+                setIsEditing({
+                  ...isEditing,
+                  personalInfo: !isEditing.personalInfo,
+                })
               }
               variant={isEditing.personalInfo ? "outline" : "default"}
               className={isEditing.personalInfo ? "" : "bg-gradient-primary "}
               style={{ width: "100%" }}
             >
               {isEditing.personalInfo ? (
-          <>
-            <X className="mr-2 h-4 w-4" />
-            Cancel
-          </>
+                <>
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </>
               ) : (
-          <>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Profile
-          </>
+                <>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Profile
+                </>
               )}
             </Button>
           </div>
@@ -348,6 +361,36 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Deactivate Account */}
+        <div className="space-y-12 my-4">
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle>Deactivate Account</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Deactivating your account will permanently remove your profile and all associated data. 
+                This action cannot be undone. If you wish to proceed, please confirm below.
+              </p>
+              <Button
+                onClick={() => setOpenDialog(true)}
+                variant="destructive"
+              >
+                <>
+                  <CircleMinus className="mr-2 h-4 w-4" />
+                  Deactivate
+                </>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {<ConfirmationDialog
+          isOpen={openDialog}
+          onClose={() => setOpenDialog(false)}
+          onConfirm={handleDeactivate}
+        />}
       </div>
     </Layout>
   );

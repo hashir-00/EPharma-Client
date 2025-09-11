@@ -1,6 +1,6 @@
 import { useToast } from "@/hooks/use-toast";
 import { AppDispatch, RootState } from "@/store";
-import { getUserProfile, updateUserPassword, updateUserProfile } from "@/store/slices/authSlice";
+import { deactivateAccount, getUserProfile, updateUserPassword, updateUserProfile } from "@/store/slices/authSlice";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -40,6 +40,9 @@ interface UseProfileHooks{
     };
     memberSince: string;
     handleSubmitPassword: (e:React.FormEvent) => Promise<void>;
+    handleDeactivate: () => Promise<void>;
+    openDialog: boolean;
+    setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function useProfileHooks(): UseProfileHooks {
@@ -100,6 +103,7 @@ export function useProfileHooks(): UseProfileHooks {
     passwordInfo: false,
   });
   const [formData, setFormData] = useState(() => initializeFormData(user));
+  const [openDialog, setOpenDialog] = useState(false);
 
   // Update formData when user data changes (after fetch or refresh)
   useEffect(() => {
@@ -207,6 +211,24 @@ export function useProfileHooks(): UseProfileHooks {
     }
   };
 
+  const handleDeactivate = async () => {
+    try {
+     
+      await dispatch(deactivateAccount(user)).unwrap();
+      toast({
+        title: "Account Deactivated",
+        description: "Your account has been successfully deactivated.",
+      });
+    } catch (error) {
+      console.error("Account deactivation error:", error);
+      toast({
+        title: "Deactivation Failed",
+        description: "Failed to deactivate account. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const emailStatus = {
     verified: user?.isEmailVerified,
     bgColor: user?.isEmailVerified
@@ -235,6 +257,9 @@ export function useProfileHooks(): UseProfileHooks {
       setIsEditing,
       emailStatus,
         memberSince,
-        handleSubmitPassword
+        handleSubmitPassword,
+        handleDeactivate,
+        openDialog,
+        setOpenDialog
     };
 }

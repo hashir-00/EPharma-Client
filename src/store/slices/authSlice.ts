@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { authAPI, usersAPI } from "@/services/api";
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name: string;
@@ -14,8 +14,8 @@ interface User {
   prescriptions?: string[];
   isActive?: boolean;
   isEmailVerified?: boolean;
+  role?: string;
 }
-
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -189,6 +189,23 @@ export const getUserProfile = createAsyncThunk(
   }
 );
 
+export const deactivateAccount = createAsyncThunk(
+  "auth/deactivateAccount",
+  async (user: Partial<User>, { rejectWithValue }) => {
+    try {
+      const response = await usersAPI.deactivateAccount(user);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      return response.data.message;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Account deactivation failed";
+      return rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -315,6 +332,23 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(updateUserPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+      // Deactivate Account
+      builder
+      .addCase(deactivateAccount.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deactivateAccount.fulfilled, (state, action) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(deactivateAccount.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

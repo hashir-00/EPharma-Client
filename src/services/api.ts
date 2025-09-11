@@ -1,5 +1,6 @@
 import axios from "axios";
 import { mockAPI, MOCK_MODE } from "@/mocks";
+import { User } from "@/store/slices/authSlice";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/v1";
@@ -88,6 +89,7 @@ export const usersAPI = {
         "Content-Type": "multipart/form-data",
       },
     }),
+    deactivateAccount: (user: Partial<User>) => api.post("/users/deactivate", user),
 
   getPrescriptions: () => api.get("/users/prescriptions"),
 };
