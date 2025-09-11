@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Mail, Heart, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,38 +11,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useForgotPasswordHooks } from "./useForgotPasswordHooks";
 
 const ForgotPassword: React.FC = () => {
-  const { toast } = useToast();
-
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // Mock password reset - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      setEmailSent(true);
-      toast({
-        title: "Reset Email Sent",
-        description: "Check your email for password reset instructions.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send reset email. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    email,
+    loading,
+    emailSent,
+    handleSubmit,
+    setEmail,
+    setEmailSent,
+  } = useForgotPasswordHooks();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-light/20 via-background to-accent/20 flex items-center justify-center p-4">

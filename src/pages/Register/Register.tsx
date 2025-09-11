@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff, Heart, Mail, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,82 +12,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { registerUser, loginSuccess } from "@/store/slices/authSlice";
-import { useToast } from "@/hooks/use-toast";
-import { RootState, AppDispatch } from "@/store";
+import { useRegisterHooks } from "./useRegisterHooks";
 
 const Register: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const { toast } = useToast();
-  const { loading: authLoading, error } = useSelector(
-    (state: RootState) => state.auth
-  );
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await dispatch(
-        registerUser({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        })
-      ).unwrap();
-
-      toast({
-        title: "Welcome to MedSupply!",
-        description: "Your account has been created successfully.",
-      });
-
-      navigate("/");
-    } catch (error) {
-      // Fallback to mock registration for development
-      const mockUser = {
-        id: Date.now().toString(),
-        email: formData.email,
-        name: formData.name,
-        prescriptions: [],
-      };
-
-      const mockToken = "mock-jwt-token-" + Date.now();
-
-      dispatch(loginSuccess({ user: mockUser, token: mockToken }));
-
-      toast({
-        title: "Welcome to MedSupply!",
-        description: "Your account has been created successfully (demo mode).",
-      });
-
-      navigate("/");
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  const {
+    formData,
+    showPassword,
+    showConfirmPassword,
+    authLoading,
+    handleSubmit,
+    handleChange,
+    setShowPassword,
+    setShowConfirmPassword,
+  } = useRegisterHooks();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary-light/20 via-background to-primary-light/20 flex items-center justify-center p-4">

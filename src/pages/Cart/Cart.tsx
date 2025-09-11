@@ -1,6 +1,4 @@
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
   Plus,
@@ -14,48 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Layout from "@/components/Layout/Layout";
-import { RootState } from "@/store";
-import { updateQuantity, removeFromCart } from "@/store/slices/cartSlice";
-import { useToast } from "@/hooks/use-toast";
+import { useCartHooks } from "./useCartHooks";
 
 const Cart: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { toast } = useToast();
 
-  const { items, total } = useSelector((state: RootState) => state.cart);
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-
-  const handleQuantityChange = (id: string, newQuantity: number) => {
-    if (newQuantity < 1) {
-      dispatch(removeFromCart(id));
-      toast({
-        title: "Item Removed",
-        description: "Item has been removed from your cart.",
-      });
-    } else {
-      dispatch(updateQuantity({ id, quantity: newQuantity }));
-    }
-  };
-
-  const handleRemoveItem = (id: string) => {
-    dispatch(removeFromCart(id));
-    toast({
-      title: "Item Removed",
-      description: "Item has been removed from your cart.",
-    });
-  };
-
-  const handleCheckout = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-    navigate("/checkout");
-  };
-  const cart = localStorage.getItem("cart");
-  console.log("Cart from localStorage:", cart);
-  const prescriptionRequired = items.some(item => item.requiresPrescription);
+const { items, total, handleQuantityChange, handleRemoveItem, handleCheckout, prescriptionRequired,navigate } = useCartHooks();
 
   if (items.length === 0) {
     return (
